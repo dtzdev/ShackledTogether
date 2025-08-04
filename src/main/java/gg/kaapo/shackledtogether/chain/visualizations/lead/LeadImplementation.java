@@ -19,6 +19,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class LeadImplementation extends ChainVisualization {
 
@@ -48,40 +49,51 @@ public class LeadImplementation extends ChainVisualization {
 
         belts.clear();
         pitons.clear();
+
         players.forEach(player -> player.setScoreboard(masterScoreboard));
         players.forEach(player -> masterScoreboard.getTeam("shackledtogether").addEntry(player.getUniqueId().toString()));
-        players.forEach(player -> belts.put(player, createAnchor(player.getLocation())));
 
-        List<RuleBoundPacket> structure = structure();
-        Bukkit.getOnlinePlayers().forEach(player -> structure.forEach(ruleBoundPacket -> send(ruleBoundPacket, player)));
+        List<CompletableFuture<Void>> spawnFutures = new ArrayList<>();
+        for (Player player : players) {
+            Carabiner carabiner = createCarabiner(player.getLocation());
+            belts.put(player, new Anchor(carabiner));
+            spawnFutures.add(carabiner.spawn());
+        }
 
-        //THIS IS VERY INEFFICIENT ;( BUT FIXES A LOT OF THINGS ;)
-        packetListener = new PacketAdapter(ShackledTogether.getInstance(), ListenerPriority.NORMAL, PacketType.Play.Server.SPAWN_ENTITY) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                UUID uuid = event.getPacket().getUUIDs().read(0);
-                EntityType entityType = Bukkit.getEntity(uuid).getType();
+        CompletableFuture.allOf(spawnFutures.toArray(new CompletableFuture[0])).thenRun(() -> {
+            List<RuleBoundPacket> structure = structure();
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                structure.forEach(ruleBoundPacket -> send(ruleBoundPacket, player));
+            });
 
-                if (entityType.equals(EntityType.RABBIT)) {
-                    refreshPackets(event.getPlayer());
+            packetListener = new PacketAdapter(ShackledTogether.getInstance(), ListenerPriority.NORMAL, PacketType.Play.Server.SPAWN_ENTITY) {
+                @Override
+                public void onPacketSending(PacketEvent event) {
+                    UUID uuid = event.getPacket().getUUIDs().read(0);
+                    EntityType entityType = Bukkit.getEntity(uuid).getType();
+
+                    if (entityType.equals(EntityType.RABBIT)) {
+                        refreshPackets(event.getPlayer());
+                    }
                 }
-            }
-        };
-        ShackledTogether.getInstance().getProtocolManager().addPacketListener(packetListener);
-
+            };
+            ShackledTogether.getInstance().getProtocolManager().addPacketListener(packetListener);
+        });
     }
 
     @Override
     public void tick() {
         for (Player player : belts.keySet()) {
             for (Carabiner carabiner : belts.get(player).getCarabiners()) {
-                shackledTogether.getFoliaLib().getScheduler().runAtEntity(carabiner.getCarabiner(), task -> {
-                    carabiner.getCarabiner().teleport(player.getLocation().clone().add(
-                            -Math.sin(Math.toRadians(player.getLocation().getYaw() + 180)) * 0.3,
-                            0.8,
-                            Math.cos(Math.toRadians(player.getLocation().getYaw() + 180)) * 0.3
-                    ));
-                });
+                if (carabiner.getCarabiner() != null && carabiner.getCarabiner().isValid()) {
+                    shackledTogether.getFoliaLib().getScheduler().runAtEntity(carabiner.getCarabiner(), task -> {
+                        carabiner.getCarabiner().teleport(player.getLocation().clone().add(
+                                -Math.sin(Math.toRadians(player.getLocation().getYaw() + 180)) * 0.3,
+                                0.8,
+                                Math.cos(Math.toRadians(player.getLocation().getYaw() + 180)) * 0.3
+                        ));
+                    });
+                }
             }
         }
     }
