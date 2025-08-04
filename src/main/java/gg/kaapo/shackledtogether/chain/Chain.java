@@ -19,6 +19,7 @@ public class Chain {
     static final List<Chain> chains = new ArrayList<>();
 
     private final UUID uuid = UUID.randomUUID();
+    private final ShackledTogether shackledTogether = ShackledTogether.getInstance();
 
     private final List<Player> players = new ArrayList<>();
     private final List<PlayerPair> playerPairs = new ArrayList<>();
@@ -99,20 +100,17 @@ public class Chain {
     }
 
     private void start() {
-        task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (PlayerPair playerPair : playerPairs) {
-                    if (chainConfiguration.hasChainCollision()) {
-                        directionTracker.tick();
-                        hitScanPhase(playerPair);
-                    }
-                    mergePhase(playerPair);
-                    pullPhase(playerPair);
+        shackledTogether.getFoliaLib().getScheduler().runTimerAsync(() -> {
+            for (PlayerPair playerPair : playerPairs) {
+                if (chainConfiguration.hasChainCollision()) {
+                    directionTracker.tick();
+                    hitScanPhase(playerPair);
                 }
-                chainConfiguration.getChainVisualization().tick();
+                mergePhase(playerPair);
+                pullPhase(playerPair);
             }
-        }.runTaskTimer(ShackledTogether.getInstance(), 0, 0);
+            chainConfiguration.getChainVisualization().tick();
+        }, 0, 0);
     }
 
     private void pairPlayers() {
@@ -412,8 +410,14 @@ public class Chain {
             Vector forceA = vectorToALocation.normalize().multiply(forceMagnitude);
             Vector forceB = vectorToBLocation.normalize().multiply(forceMagnitude);
 
-            playerA.setVelocity(playerA.getVelocity().clone().add(forceA));
-            playerB.setVelocity(playerB.getVelocity().clone().add(forceB));
+            shackledTogether.getFoliaLib().getScheduler().runAtEntity(playerA, task -> {
+                playerA.setVelocity(playerA.getVelocity().clone().add(forceA));
+
+            });
+            shackledTogether.getFoliaLib().getScheduler().runAtEntity(playerB, task -> {
+                playerB.setVelocity(playerB.getVelocity().clone().add(forceB));
+
+            });
         }
     }
 

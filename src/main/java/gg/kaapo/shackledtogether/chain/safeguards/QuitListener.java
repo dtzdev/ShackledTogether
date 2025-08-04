@@ -15,9 +15,11 @@ public class QuitListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         Chain chain = shackledTogether.getAPI().getChain(event.getPlayer());
         if (chain != null) {
-            ChainLeaveEvent chainLeaveEvent = new ChainLeaveEvent(event.getPlayer(), chain, ChainLeaveEvent.LeaveReason.DISCONNECT);
-            ShackledTogether.getInstance().getServer().getPluginManager().callEvent(chainLeaveEvent);
-            chain.remove(event.getPlayer());
+            shackledTogether.getFoliaLib().getScheduler().runAtEntity(event.getPlayer(), task -> {
+                ChainLeaveEvent chainLeaveEvent = new ChainLeaveEvent(event.getPlayer(), chain, ChainLeaveEvent.LeaveReason.DISCONNECT);
+                shackledTogether.getServer().getPluginManager().callEvent(chainLeaveEvent);
+                chain.remove(event.getPlayer());
+            });
         }
     }
 }

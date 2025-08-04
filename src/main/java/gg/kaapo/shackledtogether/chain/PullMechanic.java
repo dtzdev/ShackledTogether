@@ -31,7 +31,9 @@ public class PullMechanic implements Listener {
             if (chain.getChainConfiguration().hasPullMechanic() && chain.getChainConfiguration().getPullMethod().equals(ChainConfiguration.PullMethod.RIGHT_CLICK)) {
                 if (event.getHand().equals(EquipmentSlot.HAND)) {
                     double pullEfficiency = chain.getChainConfiguration().getPullEfficiency();
-                    target.setVelocity(event.getPlayer().getLocation().getDirection().multiply(-1).multiply(pullEfficiency));
+                    shackledTogether.getFoliaLib().getScheduler().runAtEntity(target, task -> {
+                        target.setVelocity(event.getPlayer().getLocation().getDirection().multiply(-1).multiply(pullEfficiency));
+                    });
                 }
             }
         }
@@ -46,7 +48,9 @@ public class PullMechanic implements Listener {
 
         if (chain != null && chain.getChainConfiguration().hasPullMechanic() && chain.getChainConfiguration().getPullMethod().equals(ChainConfiguration.PullMethod.LEFT_CLICK)) {
             double pullEfficiency = chain.getChainConfiguration().getPullEfficiency();
-            target.setVelocity(event.getPlayer().getLocation().getDirection().multiply(-1).multiply(pullEfficiency));
+            shackledTogether.getFoliaLib().getScheduler().runAtEntity(target, task -> {
+                target.setVelocity(event.getPlayer().getLocation().getDirection().multiply(-1).multiply(pullEfficiency));
+            });
         }
 
     }
@@ -68,9 +72,10 @@ public class PullMechanic implements Listener {
                 }
             }
             double pullEfficiency = chain.getChainConfiguration().getPullEfficiency();
-            target.setVelocity(event.getPlayer().getLocation().getDirection().multiply(-1).multiply(pullEfficiency));
+            shackledTogether.getFoliaLib().getScheduler().runAtEntity(target, task -> {
+                target.setVelocity(event.getPlayer().getLocation().getDirection().multiply(-1).multiply(pullEfficiency));
+            });
         }
-
     }
 
 

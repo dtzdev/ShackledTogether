@@ -54,15 +54,15 @@ public class ParticleImplementation extends ChainVisualization {
         for (Map.Entry<UUID, List<Player>> entry : playerChains.entrySet()) {
             UUID playerId = entry.getKey();
             Player player = Bukkit.getPlayer(playerId);
-
             if (player == null) continue;
-
-            List<Player> chain = entry.getValue();
-            for (int i = 0; i < chain.size() - 1; i++) {
-                Player from = chain.get(i);
-                Player to = chain.get(i + 1);
-                drawParticles(from, to);
-            }
+            shackledTogether.getFoliaLib().getScheduler().runAtEntity(player, task -> {
+                List<Player> chain = entry.getValue();
+                for (int i = 0; i < chain.size() - 1; i++) {
+                    Player from = chain.get(i);
+                    Player to = chain.get(i + 1);
+                    drawParticles(from, to);
+                }
+            });
         }
     }
 
@@ -96,6 +96,9 @@ public class ParticleImplementation extends ChainVisualization {
 
     @Override
     public void addPlayer(Player player) {
+        if (!players.contains(player)) {
+            players.add(player);
+        }
         playerChains.put(player.getUniqueId(), players);
     }
 

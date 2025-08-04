@@ -32,8 +32,10 @@ public class TeleportListener implements Listener {
                 break;
         }
 
-        ChainLeaveEvent leaveEvent = new ChainLeaveEvent(event.getPlayer(), chain, ChainLeaveEvent.LeaveReason.TELEPORTATION);
-        shackledTogether.getServer().getPluginManager().callEvent(leaveEvent);
-        chain.remove(event.getPlayer());
+        shackledTogether.getFoliaLib().getScheduler().runAtEntity(event.getPlayer(), task -> {
+            ChainLeaveEvent leaveEvent = new ChainLeaveEvent(event.getPlayer(), chain, ChainLeaveEvent.LeaveReason.TELEPORTATION);
+            shackledTogether.getServer().getPluginManager().callEvent(leaveEvent);
+            chain.remove(event.getPlayer());
+        });
     }
 }

@@ -1,3 +1,6 @@
+> [!WARNING]  
+> This is an very early fork with Folia support using FoliaLib's schedulers. Expect it to be broken or not fully functional.
+
 # ⛓️ ShackledTogether ⛓️
 
 A serverside Spigot plugin for chaining players together
@@ -42,6 +45,11 @@ free would benefit all.
 - Improve performance and API
 
 ## Version Support
+
+- Tested versions:
+  - Folia 1.21.8
+  - Spigot 1.21.8
+  - Paper 1.21.8
 
 - As of now this is tested on 1.21.8, should work well with older and newer versions too
 

@@ -75,7 +75,13 @@ public class LeadImplementation extends ChainVisualization {
     public void tick() {
         for (Player player : belts.keySet()) {
             for (Carabiner carabiner : belts.get(player).getCarabiners()) {
-                carabiner.getCarabiner().teleport(player.getLocation().clone().add(-Math.sin(Math.toRadians(player.getLocation().getYaw() + 180)) * 0.3, 0.8, Math.cos(Math.toRadians(player.getLocation().getYaw() + 180)) * 0.3));
+                shackledTogether.getFoliaLib().getScheduler().runAtEntity(carabiner.getCarabiner(), task -> {
+                    carabiner.getCarabiner().teleport(player.getLocation().clone().add(
+                            -Math.sin(Math.toRadians(player.getLocation().getYaw() + 180)) * 0.3,
+                            0.8,
+                            Math.cos(Math.toRadians(player.getLocation().getYaw() + 180)) * 0.3
+                    ));
+                });
             }
         }
     }
@@ -158,12 +164,10 @@ public class LeadImplementation extends ChainVisualization {
     }
 
     public void refreshPackets(Player player) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                structure().forEach(ruleBoundPacket -> send(ruleBoundPacket, player));
-            }
-        }.runTaskLater(ShackledTogether.getInstance(), 1);
+        // en oo vitunkaa varma menikö tää oikein mut tyyliy
+        shackledTogether.getFoliaLib().getScheduler().runLater(
+                task -> structure().forEach(ruleBoundPacket -> send(ruleBoundPacket, player)), 1L
+        );
     }
 
     private Carabiner createCarabiner(Location location) {
@@ -189,18 +193,22 @@ public class LeadImplementation extends ChainVisualization {
     private void broadcast(RuleBoundPacket ruleBoundPacket) {
         switch (ruleBoundPacket.getPacketRule()) {
             case EXEMPTED: {
-                List<Player> recipients = new ArrayList<>(Bukkit.getOnlinePlayers());
-                recipients.remove(ruleBoundPacket.getPlayer());
-                for (Player player : recipients) {
-                    send(ruleBoundPacket.getPacketContainer(), player);
-                }
+                shackledTogether.getFoliaLib().getScheduler().runNextTick(task -> {
+                    List<Player> recipients = new ArrayList<>(Bukkit.getOnlinePlayers());
+                    recipients.remove(ruleBoundPacket.getPlayer());
+                    for (Player player : recipients) {
+                        send(ruleBoundPacket.getPacketContainer(), player);
+                    }
+                });
                 break;
             }
             case GLOBAL: {
-                List<Player> recipients = new ArrayList<>(Bukkit.getOnlinePlayers());
-                for (Player player : recipients) {
-                    send(ruleBoundPacket.getPacketContainer(), player);
-                }
+                shackledTogether.getFoliaLib().getScheduler().runNextTick(task -> {
+                    List<Player> recipients = new ArrayList<>(Bukkit.getOnlinePlayers());
+                    for (Player player : recipients) {
+                        send(ruleBoundPacket.getPacketContainer(), player);
+                    }
+                });
                 break;
             }
             case PERSONAL: {
@@ -232,7 +240,9 @@ public class LeadImplementation extends ChainVisualization {
     }
 
     private void send(PacketContainer packetContainer, Player player) {
-        shackledTogether.getProtocolManager().sendServerPacket(player, packetContainer);
+        shackledTogether.getFoliaLib().getScheduler().runAtEntity(player, task -> {
+            shackledTogether.getProtocolManager().sendServerPacket(player, packetContainer);
+        });
     }
 
     private List<RuleBoundPacket> structure() {

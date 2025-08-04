@@ -2,6 +2,7 @@ package gg.kaapo.shackledtogether;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
+import com.tcoded.folialib.FoliaLib;
 import gg.kaapo.shackledtogether.chain.PullMechanic;
 import gg.kaapo.shackledtogether.chain.ShackledTogetherAPI;
 import gg.kaapo.shackledtogether.chain.safeguards.DeathListener;
@@ -20,6 +21,7 @@ public final class ShackledTogether extends JavaPlugin {
     private static LanguageManager languageManager;
     private ShackledTogetherAPI api;
     private ProtocolManager protocolManager;
+    private FoliaLib foliaLib;
 
     public static ShackledTogether getInstance() {
         return instance;
@@ -31,6 +33,7 @@ public final class ShackledTogether extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        foliaLib = new FoliaLib(this);
         instance = this;
         api = new ShackledTogetherAPI();
         prefix = Utility.translateColorCodes("&#4F453F[&#504640S&#514740h&#524941a&#534A42c&#534B43k&#544C43l&#554D44e&#564F45d&#575046T&#585146o&#595247g&#5A5448e&#5B5549t&#5C5649h&#5C574Ae&#5D584Br&#5E5A4C]&#5F5B4C: ");
@@ -40,6 +43,21 @@ public final class ShackledTogether extends JavaPlugin {
 
         if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null) {
             protocolManager = ProtocolLibrary.getProtocolManager();
+        }
+
+        switch(foliaLib.getImplType()) {
+            case PAPER:
+                Bukkit.getLogger().info("[ShackledTogether] Running on Paper API.");
+                break;
+            case FOLIA:
+                Bukkit.getLogger().info("[ShackledTogether] Running on Folia API.");
+                break;
+            case SPIGOT:
+                Bukkit.getLogger().info("[ShackledTogether] Running on Spigot API.");
+                break;
+            default:
+                Bukkit.getLogger().warning("[ShackledTogether] Unsupported server implementation. Please use Spigot, Paper or Folia based server software.");
+                return;
         }
 
 
@@ -64,6 +82,10 @@ public final class ShackledTogether extends JavaPlugin {
     @Override
     public void onDisable() {
 
+    }
+
+    public FoliaLib getFoliaLib() {
+        return foliaLib;
     }
 
     public ShackledTogetherAPI getAPI() {

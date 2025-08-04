@@ -16,9 +16,11 @@ public class DeathListener implements Listener {
         Chain chain = shackledTogether.getAPI().getChain(event.getEntity());
         if (chain != null) {
             if (shackledTogether.getConfig().getBoolean("safeguard-death")) {
-                ChainLeaveEvent chainLeaveEvent = new ChainLeaveEvent(event.getEntity(), chain, ChainLeaveEvent.LeaveReason.DEATH);
-                ShackledTogether.getInstance().getServer().getPluginManager().callEvent(chainLeaveEvent);
-                chain.remove(event.getEntity());
+                shackledTogether.getFoliaLib().getScheduler().runAtEntity(event.getEntity(), task -> {
+                    ChainLeaveEvent chainLeaveEvent = new ChainLeaveEvent(event.getEntity(), chain, ChainLeaveEvent.LeaveReason.DEATH);
+                    ShackledTogether.getInstance().getServer().getPluginManager().callEvent(chainLeaveEvent);
+                    chain.remove(event.getEntity());
+                });
             }
         }
     }
